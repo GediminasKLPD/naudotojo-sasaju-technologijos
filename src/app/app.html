@@ -1,51 +1,61 @@
 <main class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-12 col-sm-10 col-md-6 col-lg-5">
-      <h1 class="h3 mb-4 text-center">BMI Calculator</h1>
+  <h1 class="h3 mb-4 text-center">Notes</h1>
 
+  <div class="row justify-content-center mb-5">
+    <div class="col-12 col-md-8 col-lg-6">
       <div class="card shadow-sm">
         <div class="card-body">
-          <form (ngSubmit)="calculate()">
+          <form (ngSubmit)="add()">
             <div class="mb-3">
-              <label for="weight" class="form-label">Weight (kg)</label>
+              <label for="title" class="form-label">Title</label>
               <input
-                id="weight"
-                name="weight"
-                type="number"
-                step="0.1"
+                id="title"
+                name="title"
+                type="text"
                 class="form-control"
-                placeholder="e.g. 70"
-                [(ngModel)]="weight">
+                placeholder="Note title"
+                [(ngModel)]="noteTitle">
             </div>
 
             <div class="mb-3">
-              <label for="height" class="form-label">Height (cm)</label>
-              <input
-                id="height"
-                name="height"
-                type="number"
-                step="1"
+              <label for="text" class="form-label">Text</label>
+              <textarea
+                id="text"
+                name="text"
+                rows="4"
                 class="form-control"
-                placeholder="e.g. 180"
-                [(ngModel)]="height">
+                placeholder="Write something..."
+                [(ngModel)]="noteText"></textarea>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100">Calculate</button>
+            <button type="submit" class="btn btn-primary w-100" [disabled]="!canAdd()">Add</button>
           </form>
-
-          @if (error()) {
-            <div class="alert alert-warning mt-3 mb-0">{{ error() }}</div>
-          }
-
-          @if (bmi() !== null) {
-            <div class="alert alert-success text-center mt-3 mb-0">
-              <div class="small text-uppercase">Your BMI</div>
-              <div class="display-5 fw-bold">{{ bmi() | number:'1.2-2' }}</div>
-              <div>{{ category(bmi()!) }}</div>
-            </div>
-          }
         </div>
       </div>
     </div>
   </div>
+
+  @if (notes().length === 0) {
+    <p class="text-center text-body-secondary">No notes yet.</p>
+  } @else {
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3">
+      @for (note of notes(); track note.id) {
+        <div class="col">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+              @if (note.title) {
+                <h2 class="h5 card-title">{{ note.title }}</h2>
+              }
+              @if (note.text) {
+                <p class="card-text note-text">{{ note.text }}</p>
+              }
+            </div>
+            <div class="card-footer bg-transparent border-0 text-end">
+              <button type="button" class="btn btn-sm btn-outline-danger" (click)="remove(note.id)">Delete</button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
 </main>

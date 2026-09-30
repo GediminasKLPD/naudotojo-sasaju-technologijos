@@ -1,55 +1,62 @@
-import { Component, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+
+interface Note {
+  id: string;
+  title: string;
+  text: string;
+}
+
+const STORAGE_KEY = 'notes';
 
 @Component({
   selector: 'app-root',
-  imports: [FormsModule, DecimalPipe],
+  imports: [FormsModule],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
 export class App {
-  protected readonly weight = signal<number | null>(null);
-  protected readonly height = signal<number | null>(null);
+  protected readonly noteTitle = signal('');
+  protected readonly noteText = signal('');
 
-  protected readonly bmi = signal<number | null>(null);
-  protected readonly error = signal('');
+  protected readonly notes = signal<Note[]>(loadNotes());
 
-  protected calculate(): void {
-    const weight = this.weight();
-    const height = this.height();
+  protected readonly canAdd = computed(
+    () => this.noteTitle().trim() !== '' || this.noteText().trim() !== ''
+  );
 
-    if (weight === null || height === null) {
-      this.showError('Please enter both weight and height.');
+  protected add(): void {
+    if (!this.canAdd()) {
       return;
     }
 
-    if (weight <= 0 || height <= 0) {
-      this.showError('Weight and height must be greater than zero.');
-      return;
-    }
+    const note: Note = {
+      id: crypto.randomUUID(),
+      title: this.noteTitle().trim(),
+      text: this.noteText().trim()
+    };
 
-    const heightInMeters = height / 100;
+    this.notes.update(notes => [note, ...notes]);
+    this.saveNotes();
 
-    this.error.set('');
-    this.bmi.set(weight / (heightInMeters * heightInMeters));
+    this.noteTitle.set('');
+    this.noteText.set('');
   }
 
-  protected category(bmi: number): string {
-    if (bmi < 18.5) {
-      return 'Underweight';
-    }
-    if (bmi < 25) {
-      return 'Normal weight';
-    }
-    if (bmi < 30) {
-      return 'Overweight';
-    }
-    return 'Obese';
+  protected remove(id: string): void {
+    this.notes.update(notes => notes.filter(note => note.id !== id));
+    this.saveNotes();
   }
 
-  private showError(message: string): void {
-    this.error.set(message);
-    this.bmi.set(null);
+  private saveNotes(): void {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.notes()));
+  }
+}
+
+function loadNotes(): Note[] {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]');
+  } catch {
+    return [];
   }
 }
